@@ -11,7 +11,8 @@
 #define IDE_READ_STROBE_PORT GPIOA
 #define IDE_READ_STROBE_PIN 11
 
-
-
 void IDE_init();
-void IDE_register_op(uint8_t reg, uint16_t *value, bool write);
+
+uint16_t IDE_read(uint8_t reg);
+
+void IDE_write(uint8_t reg, uint16_t value);

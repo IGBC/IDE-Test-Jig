@@ -23,8 +23,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
 #include "ide_controller.h"
+#include "print.h"
+#include "ata_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,7 +43,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart3;
+//UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 
@@ -51,7 +52,6 @@ UART_HandleTypeDef huart3;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -89,30 +89,33 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   IDE_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  print_uart_init();
+  print("Hello!\n\r");
+  
+  ata_init();
+
+  // IDE_write(3, 0xFFFF);
+  // HAL_Delay(10);
+  // print("BIT TEST: 0x%04x ", IDE_read(3));
+  
+  read_disk(1, NULL, 1);
   while (1)
   {
-    uint16_t r_value;
-    uint8_t buffer[80];
-    uint16_t w_value = 0x00A0;
     //set drive and wait for cable to respond.
-    IDE_register_op(6, &w_value, true);
-    HAL_Delay(1);
+    //IDE_write(6, 0x00A0);
+    HAL_Delay(1000);
 
-    //IDE_register_op(3, &w_value, true);
-
-    for (int i = 0; i < 8; i++) {
-      IDE_register_op(i, &r_value, false);
-      int n = snprintf((char*)buffer, sizeof(buffer), "%i: 0x%04x, ", i, r_value);
-      HAL_UART_Transmit(&huart3, buffer, n, 10000);
+    for (int i = 1; i < 8; i++) {
+      print("%i: 0x%02x, ", i, IDE_read(i));
+      HAL_Delay(1);
     }
-    HAL_UART_Transmit(&huart3, "\r", 2, 10000);
+    print("\r");
     
     
     //HAL_Delay(1000);
@@ -162,39 +165,6 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief USART3 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART3_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART3_Init 0 */
-
-  /* USER CODE END USART3_Init 0 */
-
-  /* USER CODE BEGIN USART3_Init 1 */
-
-  /* USER CODE END USART3_Init 1 */
-  huart3.Instance = USART3;
-  huart3.Init.BaudRate = 115200;
-  huart3.Init.WordLength = UART_WORDLENGTH_8B;
-  huart3.Init.StopBits = UART_STOPBITS_1;
-  huart3.Init.Parity = UART_PARITY_NONE;
-  huart3.Init.Mode = UART_MODE_TX_RX;
-  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART3_Init 2 */
-
-  /* USER CODE END USART3_Init 2 */
-
-}
-
-/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -241,13 +211,7 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  static uint8_t buffer[128];  
-  const int maxsize = sizeof(buffer) - 1;
-  int n = snprintf((char*)buffer, sizeof(buffer), "Assert Failed: %s:%li", file, line);
-  if (n > maxsize) {n = maxsize;}
-
-  HAL_UART_Transmit(&huart3, buffer, n, 10000);
-  
+  print("Assert Failed: %s:%li", file, line);
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

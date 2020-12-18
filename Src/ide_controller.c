@@ -9,11 +9,11 @@
 #define IDE_PORT_WRITE 0x11111111
 #define IDE_ODR_READ 0x0000
 
-#define NS_ADDR_SETUP 700
-#define NS_DATA_SETUP 1650
-#define NS_WRITE_SETUP 600
-#define NS_WRITE_HOLD 300
-#define NS_READ_HOLD 200
+#define NS_ADDR_SETUP 70
+#define NS_DATA_SETUP 165
+#define NS_WRITE_SETUP 60
+#define NS_WRITE_HOLD 30
+#define NS_READ_HOLD 20
 
 void IDE_init() {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -61,54 +61,63 @@ inline void IDE_set_addr(uint8_t addr) {
     IDE_ADDRESS_PORT->BSRR = bsrr; //blit it to the port
 }
 
+/**
+ * Reads the IDE Port
+ * This is very blocking
+ */
+uint16_t IDE_read(uint8_t reg) {
+    IDE_set_addr(reg);
+    //Address setup time;
+    STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_DATA_SETUP));
+    //set port to read
+    IDE_DATA_PORT->ODR = IDE_ODR_READ;
+    IDE_DATA_PORT->CRL = IDE_PORT_READ;
+    IDE_DATA_PORT->CRH = IDE_PORT_READ;
+    // get data
+    // Set strobe pin
+    IDE_READ_STROBE_PORT->BSRR = (0x01 << (IDE_READ_STROBE_PIN + 16));
+    //data setup time
+    STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_DATA_SETUP));
+    // read input data into destination
+    uint16_t result = IDE_DATA_PORT->IDR;
+    //clear strobe pin
+    IDE_READ_STROBE_PORT->BSRR = (0x01 << (IDE_READ_STROBE_PIN));
+    // recovery time
+    STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_READ_HOLD));
+    HAL_Delay(1); // wait for the bus to shut up;
+    return result;
+}
+
 
 /** 
  * this will write/read from/to a register on the IDE bus
  * Timings are assuming mode0 and are stolen from http://blog.retroleum.co.uk/electronics-articles/an-8-bit-ide-interface/
  */
-void IDE_register_op(uint8_t reg, uint16_t *value, bool write) {
+void IDE_write(uint8_t reg, uint16_t value) {
     IDE_set_addr(reg);
     //Address setup time;
     STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_DATA_SETUP));
-    if (!write) {
-        //set port to read
-        IDE_DATA_PORT->ODR = IDE_ODR_READ;
-        IDE_DATA_PORT->CRL = IDE_PORT_READ;
-        IDE_DATA_PORT->CRH = IDE_PORT_READ;
-        // get data
-        // Set strobe pin
-        IDE_READ_STROBE_PORT->BSRR = (0x01 << (IDE_READ_STROBE_PIN + 16));
-        //data setup time
-        STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_DATA_SETUP));
-        // read input data into destination
-        *value = IDE_DATA_PORT->IDR;
-        //clear strobe pin
-        IDE_READ_STROBE_PORT->BSRR = (0x01 << (IDE_READ_STROBE_PIN));
-        // recovery time
-        STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_READ_HOLD));
-    } else {
-        // strobe the write pin.
-        IDE_WRITE_STROBE_PORT->BSRR = (0x01 << (IDE_WRITE_STROBE_PIN + 16));
-        // write setup time
-        STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_DATA_SETUP-NS_WRITE_SETUP));
+// strobe the write pin.
+    IDE_WRITE_STROBE_PORT->BSRR = (0x01 << (IDE_WRITE_STROBE_PIN + 16));
+    // write setup time
+    STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_DATA_SETUP-NS_WRITE_SETUP));
 
-        // Push Value onto port
-        IDE_DATA_PORT->ODR = *value;
-        // set port to write
-        IDE_DATA_PORT->CRL = IDE_PORT_WRITE;
-        IDE_DATA_PORT->CRH = IDE_PORT_WRITE;
-        
-        // write setup time
-        STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_WRITE_SETUP));
+    // Push Value onto port
+    IDE_DATA_PORT->ODR = value;
+    // set port to write
+    IDE_DATA_PORT->CRL = IDE_PORT_WRITE;
+    IDE_DATA_PORT->CRH = IDE_PORT_WRITE;
+    
+    // write setup time
+    STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_WRITE_SETUP));
 
-        //reset strobe
-        IDE_WRITE_STROBE_PORT->BSRR = (0x01 << (IDE_WRITE_STROBE_PIN));
-        // write hold time
-        STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_WRITE_HOLD));
-        //set port back to read
-        IDE_DATA_PORT->ODR = IDE_ODR_READ;
-        IDE_DATA_PORT->CRL = IDE_PORT_READ;
-        IDE_DATA_PORT->CRH = IDE_PORT_READ;
-    }
-
+    //reset strobe
+    IDE_WRITE_STROBE_PORT->BSRR = (0x01 << (IDE_WRITE_STROBE_PIN));
+    // write hold time
+    STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_WRITE_HOLD));
+    //set port back to read
+    IDE_DATA_PORT->ODR = IDE_ODR_READ;
+    IDE_DATA_PORT->CRL = IDE_PORT_READ;
+    IDE_DATA_PORT->CRH = IDE_PORT_READ;
+    HAL_Delay(1); // wait for the bus to shut up;
 }

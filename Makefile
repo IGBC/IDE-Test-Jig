@@ -38,6 +38,8 @@ BUILD_DIR = build
 C_SOURCES =  \
 Src/main.c \
 Src/ide_controller.c \
+Src/ata_driver.c \
+Src/print.c \
  \
 Src/stm32f1xx_it.c \
 Src/stm32f1xx_hal_msp.c \
