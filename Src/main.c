@@ -100,11 +100,11 @@ int main(void)
   
   ata_init();
 
-  // IDE_write(3, 0xFFFF);
-  // HAL_Delay(10);
-  // print("BIT TEST: 0x%04x ", IDE_read(3));
+  IDE_write(3, 0xFFFF);
+  HAL_Delay(10);
+  print("BIT TEST: 0x%04x ", IDE_read(3));
   
-  read_disk(1, NULL, 1);
+  //read_disk(1, NULL, 1);
   while (1)
   {
     //set drive and wait for cable to respond.
@@ -112,7 +112,7 @@ int main(void)
     HAL_Delay(1000);
 
     for (int i = 1; i < 8; i++) {
-      print("%i: 0x%02x, ", i, IDE_read(i));
+      print("%i: 0x%04x, ", i, IDE_read(i));
       HAL_Delay(1);
     }
     print("\r");

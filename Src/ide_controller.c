@@ -17,6 +17,16 @@
 
 void IDE_init() {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
+    // Configure CS0 
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
+    GPIO_InitStruct.Pin = GPIO_PIN_8;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = IDE_SPEED;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    
+    
+    
     // Configure Read Strobe
     HAL_GPIO_WritePin(IDE_READ_STROBE_PORT, (0x01 << IDE_READ_STROBE_PIN), GPIO_PIN_SET);
     GPIO_InitStruct.Pin = (0x01 << IDE_READ_STROBE_PIN);
