@@ -8,7 +8,7 @@ static UART_HandleTypeDef print_uart;
 
 static uint8_t print_buffer[(PRINT_BUFFER_SIZE) + 1];
 
-print(const char *format, ...) {
+void print(const char *format, ...) {
     va_list args;
     va_start(args, format);
     int n = vsnprintf((char*)print_buffer, sizeof(print_buffer), format, args );
@@ -16,6 +16,29 @@ print(const char *format, ...) {
     if (n > sizeof(print_buffer) - 1) { n = sizeof(print_buffer - 1); };
     HAL_UART_Transmit(&print_uart, print_buffer, n, 10000);
 }
+
+void hexdump(uint8_t *data, unsigned int len) {
+    print("%p\r\n", data);
+    for (unsigned int i = 0; i < (len - 8); i+=8) {
+        print("| %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x | %c%c%c%c%c%c%c%c\r\n",
+        data[i+0], data[i+1], data[i+2], data[i+3], data[i+4], data[i+5], data[i+6], data[i+7],
+        ((data[i+0] > 31) && (data[i+0] < 256)) ? data[i+0] : ' ',
+        ((data[i+1] > 31) && (data[i+1] < 256)) ? data[i+1] : ' ',
+        ((data[i+2] > 31) && (data[i+2] < 256)) ? data[i+2] : ' ',
+        ((data[i+3] > 31) && (data[i+3] < 256)) ? data[i+3] : ' ',
+        ((data[i+4] > 31) && (data[i+4] < 256)) ? data[i+4] : ' ',
+        ((data[i+5] > 31) && (data[i+5] < 256)) ? data[i+5] : ' ',
+        ((data[i+6] > 31) && (data[i+6] < 256)) ? data[i+6] : ' ',
+        ((data[i+7] > 31) && (data[i+7] < 256)) ? data[i+7] : ' ');
+    }
+    
+}
+
+void print_fixed_str(char * str, unsigned int len) {
+    HAL_UART_Transmit(&print_uart, str, len, 10000);
+    HAL_UART_Transmit(&print_uart, "\r\n", 2, 10000);
+}
+
 
 void print_uart_init() {
   print_uart.Instance = PRINT_UART;

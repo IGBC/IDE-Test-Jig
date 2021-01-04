@@ -64,26 +64,26 @@
 #define ATA_MAGIC_SELMASTER 0xA0
 #define ATA_MAGIC_EN_LBA    0x40
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
     uint16_t signature;
     uint16_t def_cylinders;
-    uint16_t reserved1;
+    uint16_t __RESERVED_1;
     uint16_t def_heads;
-    uint16_t reserved2[2];
+    uint16_t __RESERVED_2[2];
     uint16_t def_sectors;
     uint16_t num_sectors_w[2];
-    uint16_t reserved3;
+    uint16_t __RESERVED_3;
     char serial_no[20];
-    uint16_t reserved4[2];
+    uint16_t __RESERVED_4[2];
     uint16_t num_ecc_bytes;
     char firmware_rev[8];
     char model_no[40];
     uint16_t max_sectors_op;
-    uint16_t reserved5;
+    uint16_t __RESERVED_5;
     uint16_t capabilities;
-    uint16_t reserved6;
+    uint16_t __RESERVED_6;
     uint16_t timing_mode;
-    uint16_t reserved7;
+    uint16_t __RESERVED_7;
     uint16_t validity;
     uint16_t curr_cyclinders;
     uint16_t curr_heads;
@@ -91,16 +91,16 @@ typedef struct {
     uint16_t curr_lba_sectors_w[2];
     uint16_t multiple_sectors_setting;
     uint16_t total_lba_sectors_w[2];
-    uint16_t reserved8[2];
+    uint16_t __RESERVED_8[2];
     uint16_t advanced_pio_modes;
-    uint16_t reserved9[2];
+    uint16_t __RESERVED_9[2];
     uint16_t min_pio_cycle_n_iordy;
     uint16_t min_pio_cycle_w_iordy;
-    char reserved10[24];
+    char __RESERVED_10[24];
     uint16_t features_supported_w[3];
     uint16_t features_enabled_w[3];
     // There is more after this but secure erase is all that's up there, doesn't interest us.
-    char reserved11[334];
+    char __RESERVED_11[334];
 } DriveIdentity;
 
 
@@ -170,6 +170,7 @@ void ata_init() {
 
     ata_read_buffer((uint16_t *)ide_buffer, 256);
     
+
     // // spin while card is busy
     // while ((IDE_read(ATA_REG_STATUS) & ATA_SR_BSY) != 0) {
     //     print("ATA Responds Busy\r\n");
@@ -184,50 +185,30 @@ void ata_init() {
     //     return;
     // }
     
-    print("ATA: ");
-    for (int i = 0; i < sizeof(ide_buffer); i++) {
-        if (i % 16 ==  0 ) {
-            print("\r\n");
-        }
-        print("%02x, ", ide_buffer[i]);   
-    }
-    print("\r\n");
+    print("ATA: Identity > ");
+    hexdump(ide_buffer, sizeof(ide_buffer));
 
     DriveIdentity *ident = (DriveIdentity *)ide_buffer;
-    print("Drive Model: '");
-    for (int i = 0; i < 20; i++) {
-        print("%c", ident->model_no[i]);
-    }
-    print("'\r\n");
-    for (int i = 0; i < 20; i++) {
-        print("%02x ", ident->model_no[i]);
-    }
-    print("'\r\n");
+    print("signature: %04x\r\n", ident->signature);
+    
+    print("Drive Model: ");
+    print_fixed_str(ident->model_no, 20);
+    print("Drive_Serial: ");
+    print_fixed_str(ident->serial_no, 20);
+    print("Drive Firmware Rev: ");
+    print_fixed_str(ident->firmware_rev, 8);
+    
+    uint32_t def_sectors = ((uint32_t)ident->num_sectors_w[1] << 16) | ((uint32_t)ident->num_sectors_w[0]);
+    print("Def  C:%u H:%u S:%u -- LBAs: %u\r\n", ident->def_cylinders, ident->def_heads, ident->def_sectors, def_sectors);
 
-    print("Drive_Serial: '");
-    for (int i = 0; i < 20; i++) {
-        print("%c", ident->serial_no[i]);
-    }
-    print("'\r\n");
-    for (int i = 0; i < 20; i++) {
-        print("%02x ", ident->serial_no[i]);
-    }
-    print("'\r\n");
+    uint32_t curr_sectors = ((uint32_t)ident->curr_lba_sectors_w[1] << 16) | ((uint32_t)ident->curr_lba_sectors_w[0]);
+    print("Curr C:%u H:%u S:%u -- LBAs: %u\r\n", ident->curr_cyclinders, ident->curr_heads, ident->curr_sectors, curr_sectors);
 
-
-    print("Drive Firmware: '");
-    for (int i = 0; i < 8; i++) {
-        print("%c", ident->firmware_rev[i]);
-    }
-    print("'\r\n");
-    for (int i = 0; i < 8; i++) {
-        print("%02x ", ident->firmware_rev[i]);
-    }
-    print("'\r\n");
+    print("Capabilities: %04x\r\n", ident->capabilities);
 
 }
 
-void read_disk(uint16_t address, uint8_t *data, int count) {
+void ata_read_disk(uint16_t address, uint8_t *data, int count) {
     // spin while card is busy
     HAL_Delay(1);
     while (true) {
@@ -285,16 +266,7 @@ void read_disk(uint16_t address, uint8_t *data, int count) {
 
     ata_read_buffer((uint16_t *)ide_buffer, 256);
 
-    print("ATA: ");
-    for (int i = 0; i < sizeof(ide_buffer); i++) {
-        if (i % 16 ==  0 ) {
-            print("\r\n");
-        }
-        print("%02x, ", ide_buffer[i]);   
-    }
-    print("\r\n");
-
-
-
+    print("ATA: Sector %i > ", address);
+    hexdump(ide_buffer, sizeof(ide_buffer));
 }
     

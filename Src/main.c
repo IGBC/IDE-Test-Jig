@@ -65,6 +65,9 @@ static void MX_GPIO_Init(void);
   * @brief  The application entry point.
   * @retval int
   */
+
+uint8_t block[512];
+
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -103,19 +106,20 @@ int main(void)
   IDE_write(3, 0xFFFF);
   HAL_Delay(10);
   print("BIT TEST: 0x%04x ", IDE_read(3));
-  
-  //read_disk(1, NULL, 1);
+
+  ata_read_disk(0, NULL, 1);
+
   while (1)
   {
     //set drive and wait for cable to respond.
     //IDE_write(6, 0x00A0);
-    HAL_Delay(1000);
+    // HAL_Delay(1000);
 
-    for (int i = 1; i < 8; i++) {
-      print("%i: 0x%04x, ", i, IDE_read(i));
-      HAL_Delay(1);
-    }
-    print("\r");
+    // for (int i = 1; i < 8; i++) {
+    //   print("%i: 0x%04x, ", i, IDE_read(i));
+    //   HAL_Delay(1);
+    // }
+    // print("\r");
     
     
     //HAL_Delay(1000);
