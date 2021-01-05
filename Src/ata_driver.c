@@ -112,7 +112,7 @@ void ata_read_buffer(uint16_t *buffer, int size) {
     }
 }
 
-char ide_buffer[512] = {0};
+uint8_t ide_buffer[512] = {0};
 
 void ata_init() {
     bool detected;

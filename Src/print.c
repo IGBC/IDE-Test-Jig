@@ -35,8 +35,8 @@ void hexdump(uint8_t *data, unsigned int len) {
 }
 
 void print_fixed_str(char * str, unsigned int len) {
-    HAL_UART_Transmit(&print_uart, str, len, 10000);
-    HAL_UART_Transmit(&print_uart, "\r\n", 2, 10000);
+    HAL_UART_Transmit(&print_uart, (uint8_t*)str, len, 10000);
+    HAL_UART_Transmit(&print_uart, (uint8_t*)"\r\n", 2, 10000);
 }
 
 
