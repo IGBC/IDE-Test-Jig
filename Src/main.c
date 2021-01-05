@@ -105,7 +105,7 @@ int main(void)
 
   IDE_write(3, 0xFFFF);
   HAL_Delay(10);
-  print("BIT TEST: 0x%04x ", IDE_read(3));
+  print("BIT TEST: 0x%04x \r\n", IDE_read(3));
 
   ata_read_disk(0, NULL, 1);
 

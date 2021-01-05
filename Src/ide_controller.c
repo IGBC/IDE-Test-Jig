@@ -94,7 +94,6 @@ uint16_t IDE_read(uint8_t reg) {
     IDE_READ_STROBE_PORT->BSRR = (0x01 << (IDE_READ_STROBE_PIN));
     // recovery time
     STOPWATCH_DELAY(STOPWATCH_NS_TO_TICKS(NS_READ_HOLD));
-    HAL_Delay(1); // wait for the bus to shut up;
     return result;
 }
 
@@ -129,5 +128,4 @@ void IDE_write(uint8_t reg, uint16_t value) {
     IDE_DATA_PORT->ODR = IDE_ODR_READ;
     IDE_DATA_PORT->CRL = IDE_PORT_READ;
     IDE_DATA_PORT->CRH = IDE_PORT_READ;
-    HAL_Delay(1); // wait for the bus to shut up;
 }

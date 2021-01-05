@@ -107,7 +107,6 @@ typedef struct __attribute__((__packed__)) {
 void ata_read_buffer(uint16_t *buffer, int size) {
     for (int i = 0; i < size; i += 1) {
         uint16_t data = IDE_read(ATA_REG_DATA);
-        HAL_Delay(1);
         buffer[i] = data; // store low byte
         //buffer[i+1] = data >> (0xFF); // store high byte
     }
@@ -164,26 +163,7 @@ void ata_init() {
         return;
     }
     print("ATA STATUS now: 0x%02x\r\n", (uint8_t)status);
-
-    //IDE_read(0); // DEGUB!
-    HAL_Delay(1);
-
     ata_read_buffer((uint16_t *)ide_buffer, 256);
-    
-
-    // // spin while card is busy
-    // while ((IDE_read(ATA_REG_STATUS) & ATA_SR_BSY) != 0) {
-    //     print("ATA Responds Busy\r\n");
-    //     // Spitting out the UART implicitly has a delay.
-    // }
-
-    // status = IDE_read(ATA_REG_STATUS);
-    // if (status & ATA_SR_ERR) {
-    //     uint16_t error = IDE_read(ATA_SR_ERR);
-    //     print("ATA Reads Error: 0x%02x\r\n", (uint8_t)error);
-    //     // BAIL
-    //     return;
-    // }
     
     print("ATA: Identity > ");
     hexdump(ide_buffer, sizeof(ide_buffer));
@@ -233,17 +213,16 @@ void ata_read_disk(uint16_t address, uint8_t *data, int count) {
     print("ATA Requesting Read\r\n");
 
     IDE_write(ATA_REG_SECCOUNT, 1);
-    HAL_Delay(1);
+
     IDE_write(ATA_REG_LBA0, address & 0xFF);
-    HAL_Delay(1);
+
     IDE_write(ATA_REG_LBA1, address >> 8);
-    HAL_Delay(1);
+
     IDE_write(ATA_REG_LBA2, 0);
-    HAL_Delay(1);
+
     IDE_write(ATA_REG_HDDEVSEL, 0xE0);
-    HAL_Delay(1);
+
     IDE_write(ATA_REG_COMMAND, ATA_COMMAND_READ_SECTOR);
-    HAL_Delay(100);
 
     while (true) {
         int status = IDE_read(ATA_REG_STATUS);
