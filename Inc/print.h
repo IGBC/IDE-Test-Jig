@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define PRINT_BUFFER_SIZE 80
+#define PRINT_BUFFER_SIZE 120
 #define PRINT_UART USART3
 
 void print_uart_init();

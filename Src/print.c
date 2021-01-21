@@ -19,7 +19,7 @@ void print(const char *format, ...) {
 
 void hexdump(uint8_t *data, unsigned int len) {
     print("%p\r\n", data);
-    for (unsigned int i = 0; i < (len - 8); i+=8) {
+    for (unsigned int i = 0; i < (len - 7); i+=8) {
         print("| %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x | %c%c%c%c%c%c%c%c\r\n",
         data[i+0], data[i+1], data[i+2], data[i+3], data[i+4], data[i+5], data[i+6], data[i+7],
         ((data[i+0] > 31) && (data[i+0] < 256)) ? data[i+0] : ' ',
